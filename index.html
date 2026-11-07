@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="style.css">
 <script>
   /* 先套用使用者選過的深色／淺色，避免畫面閃爍 */
   try { var t = localStorage.getItem('rnw-theme'); if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
@@ -159,7 +159,7 @@
         <span>支援 .docx，格式與現行週報相同（【國內新聞】／【國外新聞】＋ 標題、摘要、原文連結）</span>
       </label>
       <input type="file" id="file-input" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
-      <p class="hint">第一次使用？可以先下載 <a href="templates/週報標準範本.docx" download>週報標準範本.docx</a>，照範本填寫最不容易出錯。</p>
+      <p class="hint">第一次使用？可以先下載 <a href="週報標準範本.docx" download>週報標準範本.docx</a>，照範本填寫最不容易出錯。</p>
     </div>
     <div role="tabpanel" id="panel-paste" aria-labelledby="tab-paste" hidden>
       <div class="field">
@@ -267,11 +267,11 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="assets/vendor/jszip.min.js"></script>
+<script src="jszip.min.js"></script>
 <script src="config.js"></script>
-<script src="data/seed.js"></script>
-<script src="assets/parser.js"></script>
-<script src="assets/store.js"></script>
-<script src="assets/app.js"></script>
+<script src="seed.js"></script>
+<script src="parser.js"></script>
+<script src="store.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
