@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>機器人產業新聞週報</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="每週整理國內外機器人產業新聞與重點觀察。">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231D3864'/%3E%3Cpath d='M9 24h10M14 24l-3-9 9-5' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='11' cy='15' r='2.4' fill='%23fff'/%3E%3Ccircle cx='20' cy='10' r='2.4' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script>
+  /* 先套用使用者選過的深色／淺色，避免畫面閃爍 */
+  try { var t = localStorage.getItem('rnw-theme'); if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner wrap gutter">
+    <a class="brand" href="#" id="brand-link" aria-label="回到最新一期">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <rect class="bm-bg" width="32" height="32" rx="7"/>
+        <path class="bm-fg" d="M9 24h10M14 24l-3-9 9-5" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+        <path class="bm-fg" d="M22.5 9l2.5-1.6M22.5 11l2.5 1.2" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <circle class="bm-dot" cx="11" cy="15" r="2.4"/>
+        <circle class="bm-dot" cx="20" cy="10" r="2.4"/>
+      </svg>
+      <span class="brand-text">
+        <span class="brand-title" id="site-title">機器人產業新聞週報</span>
+        <span class="brand-sub" id="site-sub">Robotics Industry Weekly</span>
+      </span>
+    </a>
+    <div class="topbar-actions">
+      <div class="menu" id="export-menu">
+        <button class="btn btn-ghost" id="export-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="export-pop">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 11v2.5h10V11" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="lbl">匯出</span>
+        </button>
+        <div class="menu-pop" id="export-pop" role="menu" hidden>
+          <button role="menuitem" data-export="pdf">匯出 PDF<small>目前這一期（含篩選）</small></button>
+          <button role="menuitem" data-export="csv-view">匯出 CSV<small>目前顯示的新聞</small></button>
+          <button role="menuitem" data-export="csv-all">匯出 CSV<small>全部期別的所有新聞</small></button>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-icon" id="theme-btn" aria-label="切換深色或淺色模式" title="切換深色／淺色">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5a5.5 5.5 0 0 0 0 11z" fill="currentColor"/></svg>
+      </button>
+      <button class="btn btn-primary" id="add-btn">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke-linecap="round"/></svg>
+        <span>新增<span class="lbl-x">新聞</span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="banner gutter" id="demo-banner" hidden>
+  <div class="wrap"><strong>預覽模式</strong><span>目前顯示範例資料；在這裡新增的內容只會存在你自己的瀏覽器。設定好資料庫網址後，就會變成大家共用的正式網站。</span></div>
+</div>
+<div class="banner banner-error gutter" id="error-banner" role="alert" hidden>
+  <div class="wrap"><span id="error-text">資料讀取失敗。</span><button class="btn-text" id="retry-btn">重新讀取</button></div>
+</div>
+
+<main class="wrap gutter">
+  <section class="issue" aria-labelledby="issue-range">
+    <div class="print-head" id="print-head">機器人產業新聞週報</div>
+    <span class="eyebrow" id="issue-eyebrow">最新一期</span>
+    <div class="issue-row">
+      <h1 class="issue-range" id="issue-range">載入中…</h1>
+      <div class="issue-nav">
+        <button class="btn btn-icon" id="prev-week" aria-label="上一期（較舊）">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10 3L5 8l5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <label class="sr-only" for="week-select">選擇期別</label>
+        <select class="select" id="week-select"></select>
+        <button class="btn btn-icon" id="next-week" aria-label="下一期（較新）">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+    <dl class="stats" id="stats"></dl>
+  </section>
+
+  <div class="layout">
+    <div class="main">
+      <section class="obs" id="obs" aria-labelledby="obs-title">
+        <div class="obs-head">
+          <h2 id="obs-title">本週重點觀察</h2>
+          <button class="btn-text" id="obs-edit">編輯</button>
+        </div>
+        <ol class="obs-list" id="obs-list"></ol>
+        <p class="obs-empty" id="obs-empty" hidden>這一期還沒有重點觀察。<button class="btn-text" id="obs-write">撰寫重點觀察</button></p>
+      </section>
+
+      <div class="filters" id="filters">
+        <div class="filters-row">
+          <div class="search">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14" stroke-linecap="round"/></svg>
+            <label class="sr-only" for="q">搜尋新聞</label>
+            <input id="q" type="search" placeholder="搜尋標題、摘要、來源或標籤" autocomplete="off" enterkeyhint="search">
+            <kbd aria-hidden="true">/</kbd>
+          </div>
+          <div class="seg" role="radiogroup" aria-label="區域" id="region-seg"></div>
+          <label class="sr-only" for="source-select">來源媒體</label>
+          <select class="select" id="source-select"><option value="">所有來源</option></select>
+        </div>
+        <div class="chips scroll-x" id="tag-chips" role="group" aria-label="主題標籤"></div>
+        <div class="filters-status" id="filters-status" aria-live="polite"></div>
+      </div>
+
+      <div id="list"></div>
+    </div>
+
+    <aside class="rail" aria-label="期別與主題">
+      <div>
+        <h3>本期主題分布</h3>
+        <ul class="dist" id="tag-dist"></ul>
+      </div>
+      <div>
+        <h3>所有期別</h3>
+        <ul class="archive" id="archive"></ul>
+      </div>
+      <div class="rail-note">
+        <h3>如何更新</h3>
+        <p>每週按「新增新聞」上傳 Word 週報，系統會自動拆成一則則新聞並建議標籤，確認後即刊登。</p>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<footer class="foot gutter">
+  <div class="wrap">
+    <span>新聞內容摘錄自各媒體公開報導，著作權屬原媒體；摘要僅供內部參考。</span>
+    <span id="updated-at"></span>
+  </div>
+</footer>
+
+<!-- 新增新聞 -->
+<dialog class="dlg" id="upload-dlg" aria-labelledby="upload-title">
+  <div class="dlg-head">
+    <h2 id="upload-title">新增新聞</h2>
+    <button class="btn btn-ghost btn-icon" data-close aria-label="關閉">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="tabs" role="tablist" aria-label="新增方式">
+    <button role="tab" id="tab-word" aria-selected="true" aria-controls="panel-word" data-tab="word">上傳 Word 週報</button>
+    <button role="tab" id="tab-paste" aria-selected="false" aria-controls="panel-paste" data-tab="paste">貼上文字</button>
+    <button role="tab" id="tab-single" aria-selected="false" aria-controls="panel-single" data-tab="single">單則新增</button>
+  </div>
+  <div class="dlg-body">
+    <div role="tabpanel" id="panel-word" aria-labelledby="tab-word">
+      <label class="drop" id="drop" for="file-input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 17v-6m0 0l-2.5 2.5M12 11l2.5 2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <strong>拖曳 Word 檔到這裡，或點此選擇檔案</strong>
+        <span>支援 .docx，格式與現行週報相同（【國內新聞】／【國外新聞】＋ 標題、摘要、原文連結）</span>
+      </label>
+      <input type="file" id="file-input" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+      <p class="hint">第一次使用？可以先下載 <a href="templates/週報標準範本.docx" download>週報標準範本.docx</a>，照範本填寫最不容易出錯。</p>
+    </div>
+    <div role="tabpanel" id="panel-paste" aria-labelledby="tab-paste" hidden>
+      <div class="field">
+        <label for="paste-input">貼上週報文字，或 AI 整理好的內容</label>
+        <textarea class="textarea" id="paste-input" rows="10" placeholder="【國內新聞】&#10;1. 新聞標題 - 來源媒體 2026/11/05&#10;新聞摘要……&#10;原文連結：https://…"></textarea>
+      </div>
+      <div class="row">
+        <button class="btn" id="paste-parse">解析內容</button>
+        <button class="btn-text" id="copy-convert-prompt">複製「AI 轉檔指令」</button>
+      </div>
+      <p class="hint">把指令和新聞一起貼給 ChatGPT 等 AI，它會整理成週報格式；再把結果貼回這裡即可。</p>
+    </div>
+    <div role="tabpanel" id="panel-single" aria-labelledby="tab-single" hidden>
+      <div class="form-grid" id="single-form">
+        <div class="field">
+          <span class="label">區域<span class="req">*</span></span>
+          <div class="seg" role="radiogroup" aria-label="區域" id="single-region"></div>
+        </div>
+        <div class="field">
+          <label for="s-date">新聞日期<span class="req">*</span></label>
+          <input class="input" type="date" id="s-date">
+        </div>
+        <div class="field full">
+          <label for="s-title">標題<span class="req">*</span></label>
+          <input class="input" id="s-title" maxlength="300" placeholder="新聞標題">
+        </div>
+        <div class="field">
+          <label for="s-source">來源媒體<span class="req">*</span></label>
+          <input class="input" id="s-source" list="source-list" maxlength="80" placeholder="例如：中央社">
+          <datalist id="source-list"></datalist>
+        </div>
+        <div class="field">
+          <label for="s-url">原文連結<span class="req">*</span></label>
+          <input class="input" type="url" id="s-url" maxlength="2000" placeholder="https://">
+        </div>
+        <div class="field full">
+          <label for="s-summary">摘要</label>
+          <textarea class="textarea" id="s-summary" rows="5" maxlength="3000" placeholder="約 100–250 字，客觀陳述重點"></textarea>
+        </div>
+        <div class="field full">
+          <span class="label">主題標籤（依內容自動建議，可點選調整）</span>
+          <div class="chips small" id="s-tags"></div>
+        </div>
+        <p class="note-line full" id="s-week"></p>
+      </div>
+    </div>
+    <div id="preview" hidden></div>
+  </div>
+  <div class="dlg-foot">
+    <div class="who">
+      <div class="field">
+        <label for="uploader">上傳者<span class="req">*</span></label>
+        <input class="input" id="uploader" maxlength="80" autocomplete="name" placeholder="姓名或員工編號">
+      </div>
+      <div class="field" id="code-field" hidden>
+        <label for="upload-code">團隊上傳碼<span class="req">*</span></label>
+        <input class="input" id="upload-code" type="password" maxlength="80" autocomplete="off">
+      </div>
+      <p class="who-note">上傳者只記錄在後台，不會顯示在網頁上。</p>
+    </div>
+    <div class="foot-actions">
+      <button class="btn" data-close>取消</button>
+      <button class="btn btn-primary" id="publish-btn" disabled>發布</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 重點觀察 -->
+<dialog class="dlg dlg-sm" id="obs-dlg" aria-labelledby="obs-dlg-title">
+  <div class="dlg-head">
+    <h2 id="obs-dlg-title">編輯本週重點觀察</h2>
+    <button class="btn btn-ghost btn-icon" data-close aria-label="關閉">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="dlg-body">
+    <p class="note-line" id="obs-dlg-week"></p>
+    <div class="field">
+      <label for="obs-text">一行一點；「重點短句：說明」的寫法會讓短句以粗體顯示</label>
+      <textarea class="textarea" id="obs-text" rows="9" maxlength="5000"></textarea>
+    </div>
+    <div class="row">
+      <button class="btn-text" id="copy-obs-prompt">複製「AI 撰寫指令」（含本期新聞）</button>
+    </div>
+    <p class="hint">貼給 ChatGPT 等 AI，它會依本期新聞寫出重點觀察初稿；確認內容後貼回上面即可。每次儲存都會在後台留下紀錄。</p>
+  </div>
+  <div class="dlg-foot">
+    <div class="who">
+      <div class="field">
+        <label for="obs-uploader">編輯者<span class="req">*</span></label>
+        <input class="input" id="obs-uploader" maxlength="80" autocomplete="name" placeholder="姓名或員工編號">
+      </div>
+      <div class="field" id="obs-code-field" hidden>
+        <label for="obs-code">團隊上傳碼<span class="req">*</span></label>
+        <input class="input" id="obs-code" type="password" maxlength="80" autocomplete="off">
+      </div>
+      <p class="who-note">編輯者只記錄在後台，不會顯示在網頁上。</p>
+    </div>
+    <div class="foot-actions">
+      <button class="btn" data-close>取消</button>
+      <button class="btn btn-primary" id="obs-save">儲存</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="assets/vendor/jszip.min.js"></script>
+<script src="config.js"></script>
+<script src="data/seed.js"></script>
+<script src="assets/parser.js"></script>
+<script src="assets/store.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
