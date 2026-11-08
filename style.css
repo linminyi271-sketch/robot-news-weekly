@@ -317,10 +317,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .sec-count { font-size: 13px; color: var(--muted); }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
 
-.news { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 4px; padding: 20px 22px 18px 16px; }
+.news { display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: 8px; padding: 20px 22px 18px 16px; }
+.news-index { display: flex; flex-direction: column; align-items: center; gap: 9px; min-width: 0; padding-top: 3px; }
+.delete-pick { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 11px; white-space: nowrap; cursor: pointer; }
+.delete-pick input { margin: 0; accent-color: var(--navy); }
 .news + .news { border-top: 1px solid var(--line); }
 .news:target { background: var(--navy-tint); }
-.news-no { font-family: var(--font-data); font-size: 13px; color: var(--muted); padding-top: 3px; text-align: right; padding-right: 10px; }
+.news-no { font-family: var(--font-data); font-size: 13px; color: var(--muted); text-align: center; }
 .news-body { min-width: 0; }
 .news-title { margin: 0; font-size: 17.5px; line-height: 1.55; font-weight: 700; letter-spacing: .01em; text-wrap: pretty; }
 .news-title a { text-decoration: none; }
@@ -367,7 +370,8 @@ mark { background: var(--mark); color: inherit; border-radius: 2px; padding: 0 1
 
 @media (max-width: 560px) {
   .news { grid-template-columns: minmax(0, 1fr); padding: 18px 16px 16px; }
-  .news-no { text-align: left; padding: 0; }
+  .news-index { flex-direction: row; justify-content: flex-start; align-items: center; gap: 10px; padding: 0; }
+  .news-no { text-align: left; }
   .news-actions { margin-left: 0; }
   .obs { padding: 18px 16px 14px; }
 }
@@ -376,6 +380,11 @@ mark { background: var(--mark); color: inherit; border-radius: 2px; padding: 0 1
 .rail { min-width: 0; display: grid; gap: 32px; align-content: start; }
 @media (min-width: 1080px) { .rail { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--topbar-h) + 20px); } }
 .rail h3 { margin: 0 0 10px; font-size: 12.5px; font-weight: 700; letter-spacing: .12em; color: var(--muted); }
+.rail-delete { min-width: 0; }
+.rail-delete #delete-tools { display: grid; gap: 9px; }
+.rail-delete #delete-week-select { width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; }
+.rail-delete #delete-tools .btn { width: 100%; justify-content: center; white-space: normal; text-align: center; }
+.rail-delete #delete-tools .btn:disabled { opacity: .45; cursor: not-allowed; }
 .dist { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .dist button {
   width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center;
