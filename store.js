@@ -66,7 +66,7 @@
     var obs = {};
     Object.keys(seed.observations || {}).forEach(function (k) { obs[k] = seed.observations[k]; });
     Object.keys(local.observations || {}).forEach(function (k) { obs[k] = { text: local.observations[k].text }; });
-    return normalize({ news: (seed.news || []).concat(local.news || []), observations: obs });
+    var hiddenIds = new Set(local.deletedIds || []); var hiddenWeeks = new Set(local.deletedWeeks || []);\n    return normalize({ news: (seed.news || []).concat(local.news || []).filter(function (n) { return !hiddenIds.has(String(n.id)) && !hiddenWeeks.has(String(n.week_start)); }), observations: Object.keys(obs).reduce(function (out, k) { if (!hiddenWeeks.has(k)) out[k] = obs[k]; return out; }, {}) });
   }
 
   // ---------- 正式模式 ----------
@@ -145,6 +145,18 @@
       });
       lsSet(LS_DEMO, local);
       return Promise.resolve({ ok: true, added: added, skipped: skipped });
+    },
+
+    deleteNews: function (ids, meta) {
+      if (this.mode === 'live') return apiPost({ action: 'deleteNews', ids: ids, uploader: meta.uploader, code: meta.code || '' });
+      var local = demoLocal(); local.deletedIds = (local.deletedIds || []).concat(ids.map(String)); lsSet(LS_DEMO, local);
+      return Promise.resolve({ ok: true, deleted: ids.length });
+    },
+
+    deleteWeek: function (weekStart, meta) {
+      if (this.mode === 'live') return apiPost({ action: 'deleteWeek', week_start: weekStart, uploader: meta.uploader, code: meta.code || '' });
+      var local = demoLocal(); local.deletedWeeks = (local.deletedWeeks || []).concat([weekStart]); lsSet(LS_DEMO, local);
+      return Promise.resolve({ ok: true, deleted: demoLoad().news.filter(function (n) { return n.week_start === weekStart; }).length });
     },
 
     saveObservation: function (weekStart, text, meta) {
