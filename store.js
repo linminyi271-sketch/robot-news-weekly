@@ -128,6 +128,8 @@
         return apiPost({ action: 'addNews', items: clean, uploader: meta.uploader, code: meta.code || '' });
       }
       var local = demoLocal();
+      var incomingWeeks = new Set(clean.map(function (it) { return String(it.week_start); }));
+      local.deletedWeeks = (local.deletedWeeks || []).filter(function (wk) { return !incomingWeeks.has(String(wk)); });
       var existing = demoLoad().news;
       var keys = {};
       existing.forEach(function (n) { keys[P.urlKey(n.url)] = 1; });
