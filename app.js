@@ -304,8 +304,9 @@
     });
     var titleKids = highlight(n.title, tk);
     return h('article', { class: 'news' },
-      h('label', { class: 'delete-pick', title: '選取這則新聞', style: 'display:flex;align-items:center;gap:5px;margin-right:8px;font-size:12px;color:var(--muted)' }, h('input', { type: 'checkbox', checked: state.selected.has(n.id), onchange: function (e) { if (e.target.checked) state.selected.add(n.id); else state.selected.delete(n.id); updateDeleteTools(); } }), '選取'),
-      h('div', { class: 'news-no', 'aria-hidden': 'true' }, String(i + 1).padStart(2, '0')),
+      h('div', { class: 'news-index' },
+        h('label', { class: 'delete-pick', title: '選取這則新聞' }, h('input', { type: 'checkbox', checked: state.selected.has(n.id), onchange: function (e) { if (e.target.checked) state.selected.add(n.id); else state.selected.delete(n.id); updateDeleteTools(); } }), '選取'),
+        h('div', { class: 'news-no', 'aria-hidden': 'true' }, String(i + 1).padStart(2, '0'))),
       h('div', { class: 'news-body' },
         h('h3', { class: 'news-title' }, url ? h('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, titleKids) : titleKids),
         h('div', { class: 'news-meta' },
@@ -364,12 +365,7 @@
 
   // ---------- 新聞刪除管理 ----------
   function ensureDeleteTools() {
-    var el = $('delete-tools');
-    if (el) return el;
-    el = h('div', { id: 'delete-tools', class: 'panel', style: 'display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px;margin:0 0 14px' });
-    var list = $('list');
-    list.parentNode.insertBefore(el, list);
-    return el;
+    return $('delete-tools');
   }
   function updateDeleteTools() {
     var el = $('delete-tools'); if (!el) return;
@@ -379,12 +375,13 @@
   }
   function renderDeleteTools() {
     var el = ensureDeleteTools();
-    var select = h('select', { id: 'delete-week-select', style: 'max-width:320px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text)' },
-      h('option', { value: '' }, '選擇要刪除的週報期別…'),
-      state.weeks.map(function (w) { return h('option', { value: w.start }, C.SITE_TITLE + ' ' + fmtRange(w.start, w.end) + '（' + w.items.length + ' 則）'); }));
+    if (!el) return;
+    var select = h('select', { id: 'delete-week-select' },
+      h('option', { value: '' }, '選擇週報期別…'),
+      state.weeks.map(function (w) { return h('option', { value: w.start }, fmtRange(w.start, w.end) + '（' + w.items.length + ' 則）'); }));
     var selectedBtn = h('button', { type: 'button', class: 'btn', 'data-delete-selected': '1', disabled: !state.selected.size, onclick: deleteSelected }, '刪除選取新聞（' + state.selected.size + '）');
-    var weekBtn = h('button', { type: 'button', class: 'btn', onclick: deleteWeek }, '刪除整期新聞');
-    el.replaceChildren(h('strong', null, '新聞刪除管理'), selectedBtn, select, weekBtn);
+    var weekBtn = h('button', { type: 'button', class: 'btn btn-ghost', onclick: deleteWeek }, '刪除整期新聞');
+    el.replaceChildren(selectedBtn, select, weekBtn);
   }
   function deleteMeta() {
     var name = lsGet('rnw-uploader') || '';
