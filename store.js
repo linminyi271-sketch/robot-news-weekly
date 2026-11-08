@@ -66,7 +66,8 @@
     var obs = {};
     Object.keys(seed.observations || {}).forEach(function (k) { obs[k] = seed.observations[k]; });
     Object.keys(local.observations || {}).forEach(function (k) { obs[k] = { text: local.observations[k].text }; });
-    var hiddenIds = new Set(local.deletedIds || []); var hiddenWeeks = new Set(local.deletedWeeks || []);\n    return normalize({ news: (seed.news || []).concat(local.news || []).filter(function (n) { return !hiddenIds.has(String(n.id)) && !hiddenWeeks.has(String(n.week_start)); }), observations: Object.keys(obs).reduce(function (out, k) { if (!hiddenWeeks.has(k)) out[k] = obs[k]; return out; }, {}) });
+    var hiddenIds = new Set(local.deletedIds || []); var hiddenWeeks = new Set(local.deletedWeeks || []);
+    return normalize({ news: (seed.news || []).concat(local.news || []).filter(function (n) { return !hiddenIds.has(String(n.id)) && !hiddenWeeks.has(String(n.week_start)); }), observations: Object.keys(obs).reduce(function (out, k) { if (!hiddenWeeks.has(k)) out[k] = obs[k]; return out; }, {}) });
   }
 
   // ---------- 正式模式 ----------
