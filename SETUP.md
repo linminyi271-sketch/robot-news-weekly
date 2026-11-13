@@ -79,3 +79,18 @@
 | 備份 | 試算表 **檔案 → 下載 → .xlsx**；或在網站 **匯出 → CSV（全部期別）** |
 
 上傳者只存在試算表裡；網站畫面和公開讀取的資料都不包含上傳者。
+
+
+## 自動生成本週重點觀察（新增）
+
+網站上傳一整份 Word／貼上週報並發布後，後端會使用 OpenAI API，依國內、國外新聞自動生成兩段式編者觀察，並儲存到 `observations` 分頁。單則新增新聞不會觸發整週觀察重寫。
+
+1. 到 [OpenAI API Keys](https://platform.openai.com/api-keys) 建立 API key（API 費用與 ChatGPT 訂閱分開計算）。
+2. Apps Script 編輯器左側 **專案設定 → 指令碼屬性**，新增：
+   - `OPENAI_API_KEY`：貼上 API key（只存後端，不要放進 GitHub 的 `config.js`）。
+   - `OPENAI_MODEL`：選填，預設使用 `gpt-6-astra`。
+3. 將 GitHub 最新版 `apps-script/Code.gs` 貼回 Apps Script，儲存後 **部署 → 管理部署作業 → 編輯 → 版本：新版本 → 部署**。
+4. 確認 `config.js` 的 `API_URL` 已填入這個 Apps Script 網頁應用程式的 `/exec` 網址。若仍留空，網站只會使用本機預覽資料，無法呼叫 AI 後端。
+5. 下次上傳一整份週報，發布完成後就會自動生成並儲存國內、國外兩段觀察。
+
+若未設定 API key 或後端尚未重新部署，新聞仍可能已寫入資料庫，但自動觀察會顯示錯誤；設定完成後重新上傳該週新聞即可觸發生成。
