@@ -150,12 +150,16 @@ function generateObservation_(body, uploader) {
   var items = Array.isArray(body.items) ? body.items : [];
   if (!isDate_(week)) return { ok: false, error: 'bad_week', message: '期別格式錯誤' };
   if (!items.length || items.length > LIMITS.items) return { ok: false, error: 'bad_items', message: '沒有可供分析的本期新聞，或新聞則數超過限制' };
-  var apiKey = PropertiesService.getScriptProperties().getProperty('OPENAI_API_KEY');
-  if (!apiKey) return { ok: false, error: 'missing_openai_key', message: '尚未設定 OPENAI_API_KEY，請先在 Apps Script 指令碼屬性設定 API 金鑰' };
+
+  // 使用 Gemini API 免費層；請勿將專案升級至付費方案，以免產生費用。
+  var apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!apiKey) return { ok: false, error: 'missing_gemini_key', message: '尚未設定 GEMINI_API_KEY，請在 Apps Script 指令碼屬性新增 Gemini API 金鑰' };
+
   var safeItems = items.map(function (n) {
     return { region: clean_(n.region, 10), title: clean_(n.title, LIMITS.title), source: clean_(n.source, LIMITS.source),
       date: clean_(n.date, 10), summary: cleanMultiline_(n.summary, LIMITS.summary) };
   }).filter(function (n) { return REGIONS.indexOf(n.region) !== -1 && n.title; });
+
   var prompt = [
     '你是機器人產業新聞週報的資深編輯。請只根據提供的新聞撰寫本週重點觀察。',
     '請分成兩段，第一段標題固定為【編者的話｜國內觀察】，只整理國內新聞；第二段標題固定為【編者的話｜國際趨勢】，只整理國外新聞。',
@@ -164,25 +168,35 @@ function generateObservation_(body, uploader) {
     '若某區域沒有新聞，該段寫「本週無相關新聞」。只輸出兩段標題與段落，不要加編號或其他說明。',
     '本期新聞：', JSON.stringify(safeItems)
   ].join('\n');
-  var model = PropertiesService.getScriptProperties().getProperty('OPENAI_MODEL') || 'gpt-6-astra';
-  var response = UrlFetchApp.fetch('https://api.openai.com/v1/responses', {
-    method: 'post', contentType: 'application/json', headers: { Authorization: 'Bearer ' + apiKey },
-    payload: JSON.stringify({ model: model, input: prompt, max_output_tokens: 900 }), muteHttpExceptions: true
+
+  var model = PropertiesService.getScriptProperties().getProperty('GEMINI_MODEL') || 'gemini-3.1-flash-lite';
+  var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) +
+    ':generateContent?key=' + encodeURIComponent(apiKey);
+  var response = UrlFetchApp.fetch(endpoint, {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.4, maxOutputTokens: 900 }
+    }),
+    muteHttpExceptions: true
   });
+
   var status = response.getResponseCode(), data = {};
   try { data = JSON.parse(response.getContentText()); } catch (e) {}
   if (status < 200 || status >= 300) {
-    var detail = data.error && data.error.message ? data.error.message : 'OpenAI API 回應錯誤（HTTP ' + status + '）';
+    var detail = data.error && data.error.message ? data.error.message : 'Gemini API 回應錯誤（HTTP ' + status + '）';
     throw new Error(detail);
   }
   var output = '';
-  (data.output || []).forEach(function (item) {
-    if (item.type === 'message') (item.content || []).forEach(function (part) {
-      if (part.type === 'output_text') output += part.text || '';
-    });
-  });
+  if (data.candidates && data.candidates.length && data.candidates[0].content && data.candidates[0].content.parts) {
+    data.candidates[0].content.parts.forEach(function (part) { output += part.text || ''; });
+  }
   output = output.trim();
-  if (!output) throw new Error('AI 未產生重點觀察內容，請稍後重試');
+  if (!output) {
+    var reason = data.candidates && data.candidates[0] && data.candidates[0].finishReason;
+    throw new Error('Gemini 未產生重點觀察內容' + (reason ? '（' + reason + '）' : '') + '，請稍後重試');
+  }
   saveObservation_({ week_start: week, text: output }, uploader);
   return { ok: true, text: output };
 }
