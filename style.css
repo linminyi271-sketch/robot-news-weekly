@@ -523,23 +523,23 @@ label.chk input { accent-color: var(--navy); width: 16px; height: 16px; }
 /* ---------- 列印／匯出 PDF ---------- */
 .print-head { display: none; }
 @media print {
-  @page { size: A4; margin: 16mm 14mm; }
-  :root { --bg: #fff; --surface: #fff; --ink: #000; --ink-2: #222; --muted: #555; --line: #ccc; --navy: #1D3864; --navy-tint: #F1F4F9; --marker: #F7DD72; }
-  body { background: #fff; font-size: 11pt; }
-  body::before, .topbar, .banner, .filters, .rail, .issue-nav, .news-actions, #obs-edit, .obs-empty button, .foot, .toast, .week-head button { display: none !important; }
-  .print-head { display: block; font-family: var(--font-display); font-size: 12pt; color: var(--navy); margin-bottom: 4mm; }
-  .gutter { padding: 0; }
+  @page { size: A4; margin: 0; }
+  body { background: #fff !important; color: #111 !important; font-size: 11pt; padding: 16mm 15mm !important; }
+  body::before, .topbar, .banner, .filters, .rail, .issue-nav, .news-actions, #obs-edit,
+  .obs-empty button, .foot, .toast, .week-head button, .delete-pick, .news-index { display: none !important; }
+  .gutter { padding: 0 !important; }
   .issue { padding: 0 0 6mm; }
-  .issue-range { font-size: 22pt; }
-  .stats { margin-top: 3mm; }
   .layout { display: block; padding: 0; }
-  .main { max-width: none; }
+  .main { max-width: none; width: 100%; }
   .obs { border: 1px solid #ccc; break-inside: avoid; }
   .panel { border: 0; }
-  .news { padding: 4mm 0; grid-template-columns: 8mm minmax(0, 1fr); break-inside: avoid; }
+  .sec-head { break-after: avoid-page; page-break-after: avoid; }
+  .group { break-inside: auto; }
+  .news { display: block !important; padding: 4mm 0; break-inside: avoid; page-break-inside: avoid; }
   .news-sum.clamp { display: block; -webkit-line-clamp: unset; overflow: visible; }
-  .news-title a { text-decoration: none; }
-  .print-url { display: block; margin: 2mm 0 0; font-size: 8.5pt; color: #444; overflow-wrap: anywhere; }
+  .news-title a { color: #111; text-decoration: none; }
+  .print-url { display: block; margin: 2mm 0 0; font-size: 8.5pt; overflow-wrap: anywhere; }
+  .print-url a { color: #174a86; text-decoration: underline; }
   .tag { background: none; padding: 0; border: 0; color: #555; }
   .tag::before { content: "#"; }
 }
