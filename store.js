@@ -172,6 +172,18 @@
       return Promise.resolve({ ok: true });
     },
 
+    generateObservation: function (weekStart, items, meta) {
+      if (this.mode === 'live') {
+        return apiPost({ action: 'generateObservation', week_start: weekStart, items: items, uploader: meta.uploader, code: meta.code || '' });
+      }
+      var domestic = items.filter(function (n) { return n.region === '國內'; });
+      var abroad = items.filter(function (n) { return n.region === '國外'; });
+      var text = [];
+      if (domestic.length) text.push('【編者的話｜國內觀察】\\n' + domestic.map(function (n) { return n.title + '：' + n.summary; }).join(' '));
+      if (abroad.length) text.push('【編者的話｜國際趨勢】\\n' + abroad.map(function (n) { return n.title + '：' + n.summary; }).join(' '));
+      return this.saveObservation(weekStart, text.join('\\n\\n'), meta);
+    },
+
     resetDemo: function () { try { localStorage.removeItem(LS_DEMO); } catch (e) { /* 忽略 */ } }
   };
 
