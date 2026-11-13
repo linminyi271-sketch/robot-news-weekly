@@ -495,16 +495,20 @@
         return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
       });
     }
+    var globalNewsNo = 0;
+    var printedRegionCount = 0;
     var groups = REGIONS.map(function (region) {
       var rows = items.filter(function (n) { return n.region === region; });
       if (!rows.length) return '';
-      return '<section class="region-group"><h2 class="region-title">' + esc(region) + '新聞</h2>' +
-        rows.map(function (n, i) {
+      var pageBreak = printedRegionCount++ > 0 ? ' style="break-before:page;page-break-before:always"' : '';
+      return '<section class="region-group"' + pageBreak + '><h2 class="region-title">' + esc(region) + '新聞</h2>' +
+        rows.map(function (n) {
           var url = safeUrl(n.url);
-          return '<article class="news-item"><h3><span class="news-number">' + (i + 1) + '.</span> ' + esc(n.title) + '</h3>' +
+          globalNewsNo += 1;
+          return '<article class="news-item"><h3>' + globalNewsNo + '. ' + esc(n.title) + '</h3>' +
             '<p class="meta">' + esc(n.source) + '　｜　' + esc(fmtD(n.date)) + '</p>' +
-            (n.summary ? '<p class="summary">' + esc(n.summary).replace(/\n/g, '<br>') + '</p>' : '') +
-            (url ? '<p class="source-link">新聞連結：<a href="' + esc(url) + '">' + esc(url) + '</a></p>' : '') +
+            (n.summary ? '<p class="summary">' + esc(n.summary).replace(/\\n/g, '<br>') + '</p>' : '') +
+            (url ? '<p class="source-link">新聞連結：<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(url) + '</a></p>' : '') +
             '</article>';
         }).join('') + '</section>';
     }).join('');
@@ -520,7 +524,7 @@
       '.news-item h3{font-size:12pt;line-height:1.5;margin:0 0 2mm}.meta{font-size:9.5pt;color:#555;margin:0 0 2mm}' +
       '.summary{margin:0 0 2mm;white-space:normal}.source-link{font-size:9pt;margin:0;overflow-wrap:anywhere}' +
       'a{color:#174a86;text-decoration:underline}.observations{margin-bottom:8mm}.observations p{margin:0 0 3mm}' +
-      '.news-number{display:inline-block;min-width:1.8em;font-weight:700}.region-group{break-inside:auto}.region-group+.region-group{break-before:page;page-break-before:always;margin-top:0}' +
+      .region-group{break-inside:auto}.region-group[style*="break-before"]{break-before:page!important;page-break-before:always!important;margin-top:0}' +
       '</style></head><body>' + obsHtml + groups + '</body></html>';
     var win = window.open('', '_blank');
     if (!win) { toast('瀏覽器封鎖了列印視窗，請允許此網站開啟彈出視窗後再試。'); return; }
