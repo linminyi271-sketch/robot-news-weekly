@@ -63,6 +63,7 @@ function doPost(e) {
   try {
     if (body.action === 'addNews') return json_(addNews_(body.items, uploader));
     if (body.action === 'saveObservation') return json_(saveObservation_(body, uploader));
+    if (body.action === 'generateObservation') return json_(generateObservation_(body, uploader));
     if (body.action === 'deleteNews') return json_(deleteNews_(body.ids, uploader));
     if (body.action === 'deleteWeek') return json_(deleteWeek_(body.week_start, uploader));
     return json_({ ok: false, error: 'unknown_action', message: '未知的操作' });
@@ -142,6 +143,48 @@ function addNews_(items, uploader) {
 
   if (records.length) appendRecords_(sheet, records);
   return { ok: true, added: records.length, skipped: skipped, invalid: invalid };
+}
+
+function generateObservation_(body, uploader) {
+  var week = clean_(body.week_start, 10);
+  var items = Array.isArray(body.items) ? body.items : [];
+  if (!isDate_(week)) return { ok: false, error: 'bad_week', message: '期別格式錯誤' };
+  if (!items.length || items.length > LIMITS.items) return { ok: false, error: 'bad_items', message: '沒有可供分析的本期新聞，或新聞則數超過限制' };
+  var apiKey = PropertiesService.getScriptProperties().getProperty('OPENAI_API_KEY');
+  if (!apiKey) return { ok: false, error: 'missing_openai_key', message: '尚未設定 OPENAI_API_KEY，請先在 Apps Script 指令碼屬性設定 API 金鑰' };
+  var safeItems = items.map(function (n) {
+    return { region: clean_(n.region, 10), title: clean_(n.title, LIMITS.title), source: clean_(n.source, LIMITS.source),
+      date: clean_(n.date, 10), summary: cleanMultiline_(n.summary, LIMITS.summary) };
+  }).filter(function (n) { return REGIONS.indexOf(n.region) !== -1 && n.title; });
+  var prompt = [
+    '你是機器人產業新聞週報的資深編輯。請只根據提供的新聞撰寫本週重點觀察。',
+    '請分成兩段，第一段標題固定為【編者的話｜國內觀察】，只整理國內新聞；第二段標題固定為【編者的話｜國際趨勢】，只整理國外新聞。',
+    '每段寫成一個完整、連貫的繁體中文段落，約100至180字。先歸納本週主軸，再串聯代表性企業、技術、合作或商業化進展，最後點出共同趨勢。',
+    '不可編造新聞未提及的事實、數字、原因或預測；新聞沒有提供原因時，不要自行推測。數字只作為輔助，不要堆砌新聞標題。',
+    '若某區域沒有新聞，該段寫「本週無相關新聞」。只輸出兩段標題與段落，不要加編號或其他說明。',
+    '本期新聞：', JSON.stringify(safeItems)
+  ].join('\\n');
+  var model = PropertiesService.getScriptProperties().getProperty('OPENAI_MODEL') || 'gpt-6-astra';
+  var response = UrlFetchApp.fetch('https://api.openai.com/v1/responses', {
+    method: 'post', contentType: 'application/json', headers: { Authorization: 'Bearer ' + apiKey },
+    payload: JSON.stringify({ model: model, input: prompt, max_output_tokens: 900 }), muteHttpExceptions: true
+  });
+  var status = response.getResponseCode(), data = {};
+  try { data = JSON.parse(response.getContentText()); } catch (e) {}
+  if (status < 200 || status >= 300) {
+    var detail = data.error && data.error.message ? data.error.message : 'OpenAI API 回應錯誤（HTTP ' + status + '）';
+    throw new Error(detail);
+  }
+  var output = '';
+  (data.output || []).forEach(function (item) {
+    if (item.type === 'message') (item.content || []).forEach(function (part) {
+      if (part.type === 'output_text') output += part.text || '';
+    });
+  });
+  output = output.trim();
+  if (!output) throw new Error('AI 未產生重點觀察內容，請稍後重試');
+  saveObservation_({ week_start: week, text: output }, uploader);
+  return { ok: true, text: output };
 }
 
 function saveObservation_(body, uploader) {
