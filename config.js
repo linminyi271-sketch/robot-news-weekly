@@ -8,7 +8,7 @@ window.SITE_CONFIG = {
 
   // Google Apps Script 部署後的網址（以 /exec 結尾）。
   // 留空 = 預覽模式：顯示 data/seed.js 的範例資料，新增的內容只存在自己的瀏覽器。
-  API_URL: '',
+  API_URL: 'https://script.google.com/macros/s/AKfycbyOlKJb0EcB6O3Wj3qa7i4Fmnoi4AmHg7MeMv39anQQHVcpHq7PiEHIpJLtNakisy8p/exec',
 
   // 上傳時是否需要「團隊上傳碼」。設為 true 時，也要在 Apps Script 的「指令碼屬性」設定 UPLOAD_CODE。
   UPLOAD_CODE_REQUIRED: false,
