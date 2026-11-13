@@ -323,7 +323,7 @@
             url ? h('a', { class: 'link-out', href: url, target: '_blank', rel: 'noopener noreferrer' }, '閱讀原文', icon('ext')) : null,
             h('button', { type: 'button', class: 'icon-btn', 'aria-label': '複製這則新聞', title: '複製（標題、摘要、連結）',
               onclick: function () { copyText(P.toText(n), '已複製這則新聞'); } }, icon('copy')))),
-        url ? h('p', { class: 'print-url' }, '原文連結：' + url) : null));
+        url ? h('p', { class: 'print-url' }, '新聞連結：', h('a', { href: url }, url)) : null));
   }
 
   function updateClamps() {
@@ -485,14 +485,48 @@
     toast('已匯出 ' + filename);
   }
   function exportPdf() {
-    if (inArtifact()) { toast('預覽環境無法開啟列印視窗；部署到正式網址後，這個按鈕即可另存 PDF。'); return; }
+    if (inArtifact()) { toast('預覽環境無法開啟列印視窗；部署到正式網址後即可另存 PDF。'); return; }
     var w = curWeek();
-    var old = document.title;
-    document.title = C.SITE_TITLE + (w ? '_' + w.start + '_' + w.end : '');
-    function restore() { document.title = old; window.removeEventListener('afterprint', restore); }
-    window.addEventListener('afterprint', restore);
-    toast('在列印視窗的「目的地」選擇「另存為 PDF」。');
-    setTimeout(function () { window.print(); }, 60);
+    if (!w) { toast('目前沒有可匯出的期別。'); return; }
+    var items = sortItems(visible());
+    if (!items.length) { toast('目前沒有符合條件的新聞可匯出。'); return; }
+    function esc(v) {
+      return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+        return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
+      });
+    }
+    var groups = REGIONS.map(function (region) {
+      var rows = items.filter(function (n) { return n.region === region; });
+      if (!rows.length) return '';
+      return '<section class="region-group"><h2 class="region-title">' + esc(region) + '新聞</h2>' +
+        rows.map(function (n) {
+          var url = safeUrl(n.url);
+          return '<article class="news-item"><h3>' + esc(n.title) + '</h3>' +
+            '<p class="meta">' + esc(n.source) + '　｜　' + esc(fmtD(n.date)) + '</p>' +
+            (n.summary ? '<p class="summary">' + esc(n.summary).replace(/\n/g, '<br>') + '</p>' : '') +
+            (url ? '<p class="source-link">新聞連結：<a href="' + esc(url) + '">' + esc(url) + '</a></p>' : '') +
+            '</article>';
+        }).join('') + '</section>';
+    }).join('');
+    var obs = state.obs[w.start] && state.obs[w.start].text ? state.obs[w.start].text : '';
+    var obsHtml = obs ? '<section class="observations"><h2>本週重點觀察</h2>' +
+      obs.split(/\n+/).filter(Boolean).map(function (line) { return '<p>' + esc(line) + '</p>'; }).join('') +
+      '</section>' : '';
+    var doc = '<!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><title>' +
+      esc(C.SITE_TITLE + '_' + w.start + '_' + w.end) + '</title><style>' +
+      '@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;padding:16mm 15mm;color:#111;font:11pt/1.7 "Noto Sans TC","Microsoft JhengHei",sans-serif}' +
+      'h2{font-size:16pt;margin:0 0 5mm;font-weight:700}.region-title{break-after:avoid-page;page-break-after:avoid;margin-top:2mm}' +
+      '.news-item{break-inside:avoid;page-break-inside:avoid;padding:0 0 5mm;margin:0 0 5mm;border-bottom:1px solid #ddd}' +
+      '.news-item h3{font-size:12pt;line-height:1.5;margin:0 0 2mm}.meta{font-size:9.5pt;color:#555;margin:0 0 2mm}' +
+      '.summary{margin:0 0 2mm;white-space:normal}.source-link{font-size:9pt;margin:0;overflow-wrap:anywhere}' +
+      'a{color:#174a86;text-decoration:underline}.observations{margin-bottom:8mm}.observations p{margin:0 0 3mm}' +
+      '.region-group{break-inside:auto}.region-group+.region-group{margin-top:8mm}' +
+      '</style></head><body>' + obsHtml + groups + '</body></html>';
+    var win = window.open('', '_blank');
+    if (!win) { toast('瀏覽器封鎖了列印視窗，請允許此網站開啟彈出視窗後再試。'); return; }
+    win.document.open(); win.document.write(doc); win.document.close();
+    win.onload = function () { win.focus(); win.print(); };
+    toast('已整理 PDF 版面；列印時請選擇「另存為 PDF」。');
   }
   function doExport(kind) {
     var w = curWeek();
@@ -832,14 +866,24 @@
     var btn = $('publish-btn');
     btn.dataset.busy = '1'; btn.disabled = true; btn.textContent = '發布中…';
     var result = { added: 0, skipped: 0 };
+    var generated = false;
     var job = items.length ? S.addNews(items, meta).then(function (res) { result = res; }) : Promise.resolve();
     job.then(function () {
       if (obsText) return S.saveObservation(target, obsText, meta);
+      if (items.length && up.tab !== 'single') {
+        var weekNews = state.news.filter(function (n) { return n.week_start === target; }).map(function (n) {
+          return { region:n.region, title:n.title, source:n.source, date:n.date, summary:n.summary, url:n.url };
+        }).concat(items.map(function (n) {
+          return { region:n.region, title:n.title, source:n.source, date:n.date, summary:n.summary, url:n.url };
+        }));
+        return S.generateObservation(target, weekNews, meta).then(function () { generated = true; });
+      }
     }).then(function () {
       $('upload-dlg').close();
       var msg = '已發布 ' + result.added + ' 則';
       if (result.skipped) msg += '，略過 ' + result.skipped + ' 則重複';
       if (obsText) msg += '，並更新重點觀察';
+      else if (generated) msg += '，已自動生成國內／國外重點觀察';
       toast(msg);
       state.q = ''; $('q').value = '';
       return reload(target);
