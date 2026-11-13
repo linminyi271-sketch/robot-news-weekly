@@ -163,7 +163,7 @@ function generateObservation_(body, uploader) {
     '不可編造新聞未提及的事實、數字、原因或預測；新聞沒有提供原因時，不要自行推測。數字只作為輔助，不要堆砌新聞標題。',
     '若某區域沒有新聞，該段寫「本週無相關新聞」。只輸出兩段標題與段落，不要加編號或其他說明。',
     '本期新聞：', JSON.stringify(safeItems)
-  ].join('\\n');
+  ].join('\n');
   var model = PropertiesService.getScriptProperties().getProperty('OPENAI_MODEL') || 'gpt-6-astra';
   var response = UrlFetchApp.fetch('https://api.openai.com/v1/responses', {
     method: 'post', contentType: 'application/json', headers: { Authorization: 'Bearer ' + apiKey },
