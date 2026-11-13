@@ -866,7 +866,7 @@
     var btn = $('publish-btn');
     btn.dataset.busy = '1'; btn.disabled = true; btn.textContent = '發布中…';
     var result = { added: 0, skipped: 0 };
-    var generated = false;
+    var generated = false, generationError = '';
     var job = items.length ? S.addNews(items, meta).then(function (res) { result = res; }) : Promise.resolve();
     job.then(function () {
       if (obsText) return S.saveObservation(target, obsText, meta);
@@ -876,7 +876,9 @@
         }).concat(items.map(function (n) {
           return { region:n.region, title:n.title, source:n.source, date:n.date, summary:n.summary, url:n.url };
         }));
-        return S.generateObservation(target, weekNews, meta).then(function () { generated = true; });
+        return S.generateObservation(target, weekNews, meta).then(function () { generated = true; }).catch(function (e) {
+          generationError = (e && e.message) || 'AI 重點觀察生成失敗';
+        });
       }
     }).then(function () {
       $('upload-dlg').close();
@@ -884,6 +886,7 @@
       if (result.skipped) msg += '，略過 ' + result.skipped + ' 則重複';
       if (obsText) msg += '，並更新重點觀察';
       else if (generated) msg += '，已自動生成國內／國外重點觀察';
+      else if (generationError) msg += '，但自動重點觀察未完成：' + generationError;
       toast(msg);
       state.q = ''; $('q').value = '';
       return reload(target);
