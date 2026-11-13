@@ -55,11 +55,11 @@
   function inArtifact() { return !!(window.claude && typeof window.claude.use === 'function'); }
 
   var toastTimer;
-  function toast(msg) {
+  function toast(msg, duration) {
     var t = $('toast');
     t.textContent = msg; t.hidden = false;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { t.hidden = true; }, 3600);
+    toastTimer = setTimeout(function () { t.hidden = true; }, duration || 3600);
   }
   function copyText(text, okMsg) {
     function fallback() {
@@ -911,6 +911,27 @@
     $('obs-code-field').hidden = !C.UPLOAD_CODE_REQUIRED;
     $('obs-dlg').showModal();
   }
+  function regenerateObs() {
+    var meta = who('obs-uploader', 'obs-code');
+    if (!meta) return;
+    var w = curWeek();
+    if (!w) { toast('目前沒有可供分析的期別。'); return; }
+    var items = state.news.filter(function (n) { return n.week_start === w.start; }).map(function (n) {
+      return { region:n.region, title:n.title, source:n.source, date:n.date, summary:n.summary, url:n.url };
+    });
+    if (!items.length) { toast('本期沒有新聞可供 AI 分析。'); return; }
+    var btn = $('obs-ai');
+    btn.disabled = true; btn.textContent = 'AI 撰寫中…';
+    S.generateObservation(w.start, items, meta).then(function (res) {
+      $('obs-text').value = res.text || '';
+      toast('AI 已完成本週重點觀察，請確認內容後按「儲存」。', 12000);
+    }).catch(function (e) {
+      toast('AI 生成失敗：' + ((e && e.message) || '未知錯誤'), 20000);
+    }).then(function () {
+      btn.disabled = false; btn.textContent = 'AI 重新生成';
+    });
+  }
+
   function saveObs() {
     var meta = who('obs-uploader', 'obs-code');
     if (!meta) return;
@@ -1013,6 +1034,7 @@
     $('obs-edit').addEventListener('click', openObs);
     $('obs-write').addEventListener('click', openObs);
     $('obs-save').addEventListener('click', saveObs);
+    $('obs-ai').addEventListener('click', regenerateObs);
     $('copy-obs-prompt').addEventListener('click', function () { copyText(obsPrompt(), '已複製 AI 撰寫指令（含本期新聞）'); });
     $('retry-btn').addEventListener('click', function () { reload(); });
   }
