@@ -95,11 +95,31 @@
     });
   }
   function apiGet() {
-    var url = C.API_URL + (C.API_URL.indexOf('?') === -1 ? '?' : '&') + 'action=list&t=' + Date.now();
-    return withTimeout(function (signal) { return fetch(url, { method: 'GET', redirect: 'follow', signal: signal }); }, 25000).then(function (r) {
-      if (!r.ok) throw new Error('讀取資料失敗（HTTP ' + r.status + '）');
-      return r.json();
-    }).then(function (j) {
+    // Apps Script ContentService 會經過重新導向，GitHub Pages 的 fetch 可能遭 CORS 阻擋。
+    // 改用 JSONP script 跨網域讀取，只用於公開新聞清單。
+    return withTimeout(function (signal) {
+      return new Promise(function (resolve, reject) {
+        var callback = '__robotNewsJsonp_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+        var script = document.createElement('script');
+        var settled = false;
+        function cleanup() {
+          if (script.parentNode) script.parentNode.removeChild(script);
+          try { delete window[callback]; } catch (e) { window[callback] = undefined; }
+          if (signal) signal.removeEventListener('abort', onAbort);
+        }
+        function finish(fn, value) {
+          if (settled) return;
+          settled = true; cleanup(); fn(value);
+        }
+        function onAbort() { finish(reject, new Error('讀取新聞逾時，請稍後重試')); }
+        window[callback] = function (data) { finish(resolve, data); };
+        script.onerror = function () { finish(reject, new Error('無法連接 Google Apps Script，請確認後端已部署 JSONP 版本')); };
+        if (signal) signal.addEventListener('abort', onAbort);
+        var sep = C.API_URL.indexOf('?') === -1 ? '?' : '&';
+        script.src = C.API_URL + sep + 'action=list&callback=' + encodeURIComponent(callback) + '&t=' + Date.now();
+        document.head.appendChild(script);
+      });
+    }, 25000).then(function (j) {
       if (!j || j.ok === false) throw new Error((j && j.message) || '讀取資料失敗');
       return j;
     });
