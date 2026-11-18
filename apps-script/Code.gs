@@ -36,13 +36,21 @@ function setup() {
 
 function doGet(e) {
   var action = (e && e.parameter && e.parameter.action) || 'list';
+  var callback = (e && e.parameter && e.parameter.callback) || '';
+  var result;
   try {
-    if (action === 'list') return json_(list_());
-    if (action === 'ping') return json_({ ok: true });
-    return json_({ ok: false, error: 'unknown_action', message: '未知的操作' });
+    if (action === 'list') result = list_();
+    else if (action === 'ping') result = { ok: true };
+    else result = { ok: false, error: 'unknown_action', message: '未知的操作' };
   } catch (err) {
-    return json_({ ok: false, error: 'server_error', message: '伺服器錯誤：' + err });
+    result = { ok: false, error: 'server_error', message: '伺服器錯誤：' + err };
   }
+  // 僅接受簡單函式名稱，避免 callback 參數注入任意程式碼。
+  if (callback && /^[A-Za-z_$][0-9A-Za-z_$]*$/.test(callback)) {
+    return ContentService.createTextOutput(callback + '(' + JSON.stringify(result) + ');')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return json_(result);
 }
 
 function doPost(e) {
