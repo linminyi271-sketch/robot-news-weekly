@@ -530,7 +530,7 @@
       '.news-item h3{font-size:12pt;line-height:1.5;margin:0 0 2mm}.meta{font-size:9.5pt;color:#555;margin:0 0 2mm}' +
       '.summary{margin:0 0 2mm;white-space:normal}.source-link{font-size:9pt;margin:0;overflow-wrap:anywhere}' +
       'a{color:#174a86;text-decoration:underline}.observations{margin-bottom:8mm}.observations p{margin:0 0 3mm}' +
-      .region-group{break-inside:auto}.region-group[style*="break-before"]{break-before:page!important;page-break-before:always!important;margin-top:0}' +
+      '.region-group{break-inside:auto}.region-group[style*="break-before"]{break-before:page!important;page-break-before:always!important;margin-top:0}' +
       '</style></head><body>' + obsHtml + groups + '</body></html>';
     var win = window.open('', '_blank');
     if (!win) { toast('瀏覽器封鎖了列印視窗，請允許此網站開啟彈出視窗後再試。'); return; }
