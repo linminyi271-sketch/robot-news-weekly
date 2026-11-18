@@ -444,14 +444,20 @@
     rebuild();
   }
   function reload(targetWeek) {
-    return S.load().then(function (d) {
+    var request;
+    try { request = S.load(); }
+    catch (e) { request = Promise.reject(e); }
+    return Promise.resolve(request).then(function (d) {
       apply(d);
       if (targetWeek && state.weeks.some(function (w) { return w.start === targetWeek; })) state.week = targetWeek;
       $('error-banner').hidden = true;
-    }, function (e) {
-      $('error-text').textContent = '資料讀取失敗：' + (e && e.message ? e.message : '請檢查網路連線') + '。';
+    }).catch(function (e) {
+      $('error-text').textContent = '資料讀取失敗：' + (e && e.message ? e.message : '請檢查網路連線') + '。請按「重試」再次連線。';
       $('error-banner').hidden = false;
-    }).then(function () { state.loaded = true; renderAll(); });
+    }).then(function () {
+      state.loaded = true;
+      renderAll();
+    });
   }
 
   // ---------- 匯出 ----------
