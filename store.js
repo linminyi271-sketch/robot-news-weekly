@@ -73,8 +73,22 @@
   // ---------- 正式模式 ----------
   function withTimeout(promiseFn, ms) {
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, ms);
-    return promiseFn(ctrl ? ctrl.signal : undefined).then(function (v) { clearTimeout(timer); return v; }, function (e) {
+    var timer;
+    var request;
+    try {
+      request = Promise.resolve(promiseFn(ctrl ? ctrl.signal : undefined));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+    var timeout = new Promise(function (_, reject) {
+      timer = setTimeout(function () {
+        if (ctrl) { try { ctrl.abort(); } catch (e) {} }
+        reject(new Error('連線逾時（' + Math.round(ms / 1000) + ' 秒），請檢查網路或 Google Apps Script 部署權限'));
+      }, ms);
+    });
+    return Promise.race([request, timeout]).then(function (v) {
+      clearTimeout(timer); return v;
+    }, function (e) {
       clearTimeout(timer);
       if (e && e.name === 'AbortError') throw new Error('連線逾時，請稍後再試');
       throw e;
